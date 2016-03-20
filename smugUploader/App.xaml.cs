@@ -14,6 +14,8 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using Windows.Security.Credentials;
+using System.Diagnostics;
 
 
 namespace smugUploader
@@ -76,7 +78,25 @@ namespace smugUploader
                 // When the navigation stack isn't restored navigate to the first page,
                 // configuring the new page by passing required information as a navigation
                 // parameter
-                rootFrame.Navigate(typeof(MainPage), e.Arguments);
+
+
+                // Check if credentials for OAuth do exist.
+                var vault = new PasswordVault();
+                string connected = "Not Connected to SmugMug";
+                try {
+                    var credentialList = vault.FindAllByResource("OAuthToken");
+                    
+                    if (credentialList.Count > 0)
+                    {
+                        // Some credentials do exist
+                        connected = "Connected to SmugMug";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine("{0} Exception caught.", ex);
+                }
+                rootFrame.Navigate(typeof(MainPage), connected);
             }
             // Ensure the current window is active
             Window.Current.Activate();

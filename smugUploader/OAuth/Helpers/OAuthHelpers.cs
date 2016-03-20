@@ -140,18 +140,6 @@ namespace smugUploader.OAuth.Helpers
             IBuffer DataToBeSigned = CryptographicBuffer.ConvertStringToBinary(data, BinaryStringEncoding.Utf8);
             IBuffer SignatureBuffer = CryptographicEngine.Sign(MacKey, DataToBeSigned);
             return CryptographicBuffer.EncodeToBase64String(SignatureBuffer);
-
-
-            //calculating the signature 
-            //MacAlgorithmProvider HmacSha1Provider = MacAlgorithmProvider.OpenAlgorithm("HMAC_SHA1");
-
-            //IBuffer keyMaterial;
-            //keyMaterial = CryptographicBuffer.ConvertStringToBinary(key, BinaryStringEncoding.Utf8);
-
-            //CryptographicKey cryptoKey = HmacSha1Provider.CreateKey(keyMaterial);
-            //IBuffer dataString = CryptographicBuffer.ConvertStringToBinary(data, BinaryStringEncoding.Utf8);
-
-            //return Uri.EscapeDataString(CryptographicBuffer.EncodeToBase64String(CryptographicEngine.Sign(cryptoKey, dataString)));
         }
     }
 }

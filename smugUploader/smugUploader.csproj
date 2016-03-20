@@ -93,6 +93,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="project.json" />
+    <PRIResource Include="SmugMugAuthorize.resw" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App.xaml.cs">
@@ -104,6 +105,9 @@
     <Compile Include="OAuth\Helpers\Constants.cs" />
     <Compile Include="OAuth\Helpers\OAuthHelpers.cs" />
     <Compile Include="OAuth\OAuth.cs" />
+    <Compile Include="OAuth\OAuthMessageHandler.cs" />
+    <Compile Include="OAuth\OAuthToken.cs" />
+    <Compile Include="OAuth\smugAuthorization.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

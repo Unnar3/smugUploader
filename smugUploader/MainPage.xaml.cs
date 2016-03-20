@@ -15,6 +15,8 @@ using Windows.UI.Xaml.Navigation;
 using smugUploader.OAuth;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Windows.Security.Authentication.Web;
+using System.Diagnostics;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -25,9 +27,12 @@ namespace smugUploader
     /// </summary>
     public sealed partial class MainPage : Page
     {
+        private smugAuthorization smug;
+
         public MainPage()
         {
             this.InitializeComponent();
+            smug = new smugAuthorization("xxGn8kaV0HfrQ1m8fvrtKYQFcqnAQUvl", "28eb860ff20d1884ec54e5cb9c3dad9a");
         }
 
         private static async Task<string> GetResponseContent(string url)
@@ -40,45 +45,75 @@ namespace smugUploader
 
         private async void button_Click(object sender, RoutedEventArgs e)
         {
-            const string OAuthBaseUrl = "https://secure.smugmug.com";
-            const string OAuthGetRequestTokenUrl = OAuthBaseUrl + "/services/oauth/1.0a/getRequestToken";
-            const string OAuthAuthorizeUrl = OAuthBaseUrl + "/services/oauth/1.0a/authorize";
-            const string OAuthGetAccessTokenUrl = OAuthBaseUrl + "/services/oauth/1.0a/getAccessToken";
-            const string NonWebOAuthApplicationCallback = "oob";
 
-            smugUploader.OAuthAuthenticator authenticator = new smugUploader.OAuthAuthenticator("xxGn8kaV0HfrQ1m8fvrtKYQFcqnAQUvl", "28eb860ff20d1884ec54e5cb9c3dad9a");
-            string reqTokUrl = authenticator.CreateGetRequestTokenAddress(OAuthGetRequestTokenUrl, HttpMethod.Get.ToString(), NonWebOAuthApplicationCallback);
-
-            HttpClient client = new HttpClient();
-            HttpResponseMessage response = await client.GetAsync(reqTokUrl);
-            if (response.IsSuccessStatusCode)
+            bool connected = await smug.connectToSmugMug();
+            if (connected)
             {
-                textBox.Text = await response.Content.ReadAsStringAsync();
+                textBox.Text = "Connected to SmugMug";
             }
+            else
+            {
+                textBox.Text = "Not connected to SmugMug";
+            }
+        }
 
-            //string tokens = GetResponseContent(reqTokUrl).Result;
-            // Figure out which authorization options are requested (if any)
-            //string authorizationOptions = options == null ? string.Empty : "?" + options.AsQueryString();
-            //string authorizeUrl = authenticator.CreateAuthorizeAddress(OAuthAuthorizeUrl, tokens);
-            
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            textBox.Text = e.Parameter as string;
+        }
 
-            //var uri = new Uri(@authorizeUrl);
+        private async void button1_Click(object sender, RoutedEventArgs e)
+        {
+            //Read in values in vault.
 
-            // Launch the URI
-            //var success = await Windows.System.Launcher.LaunchUriAsync(uri);
+            var vault = new Windows.Security.Credentials.PasswordVault();
+            var credential = vault.Retrieve("OAuthToken", "SmugMug");
 
-            //if (success)
+            string[] auths = credential.Password.Split('|');
+
+            OAuthToken token = new OAuthToken(auths[0], auths[1], auths[2], auths[3]);
+
+            Debug.WriteLine(auths[0]);
+            Debug.WriteLine(auths[1]);
+            Debug.WriteLine(auths[2]);
+            Debug.WriteLine(auths[3]);
+
+            OAuthMessageHandler handler = new OAuthMessageHandler(
+                token.ApiKey,
+                token.Secret,
+                token.Token,
+                token.TokenSecret);
+            HttpClient client = new HttpClient(handler);
+
+            // Make sure we request JSON data
+            client.DefaultRequestHeaders.Accept.Clear();
+            client.DefaultRequestHeaders.Accept.Add(
+                new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+
+
+            string uri = @"https://api.smugmug.com/api/v2!authuser";
+            //handler.GetAuthenticationHeaderForRequest(new Uri(uri), HttpMethod.Get);
+            HttpResponseMessage response = await client.GetAsync(uri);
+            textBlock.Text = await response.Content.ReadAsStringAsync();
+            //var credentialList = vault.FindAllByResource("OAuthToken");
+            //if (credentialList.Count > 0)
             //{
-            //    textBox.Text = reqTokUrl;
-            //}
-            //else
-            //{
-            //    textBox.Text = "ohhhh";
-            //}
-            //string tokens = GetResponseContent(reqTokUrl).Result;
-            //OAuth.OAuth smugOauth = new OAuth.OAuth("xxGn8kaV0HfrQ1m8fvrtKYQFcqnAQUvl", "28eb860ff20d1884ec54e5cb9c3dad9a");
-            //string normalized = smugOauth.GetAuthTokens();
+            //    if (credentialList.Count == 1)
+            //    {
+            //        credential = credentialList[0];
+            //    }
+            //    else
+            //    {
+            //        // When there are multiple usernames,
+            //        // retrieve the default username. If one doesn’t
+            //        // exist, then display UI to have the user select
+            //        // a default username.
 
+            //        defaultUserName = GetDefaultUserNameUI();
+
+            //        credential = vault.Retrieve(resourceName, defaultUserName);
+            //    }
+            //}
         }
     }
 }
